@@ -1,3 +1,5 @@
-import Example from './Example';
+// components
+export { default as CircularSlider } from './CircularSlider';
 
-export { Example };
+// types
+export type { CircularSliderProps } from './CircularSlider';
