@@ -7,27 +7,20 @@ export type CircularSliderProps = {
   trackRadius?: number;
   thumbRadius?: number;
   trackWidth?: number;
-
-  /**
-   * @value 0 to 100
-   */
   value?: number;
   onChange?: (x: number) => any;
-
   trackColor?: string;
   thumbColor?: string;
   trackTintColor?: string;
-
-  thumbMarkerColor?: string;
+  thumbTextColor?: string;
   thumbTextSize?: number;
-
   noThumb?: boolean;
-
   showText?: boolean;
   showThumbText?: boolean;
-
   textColor?: string;
   textSize?: number;
+  minimumValue?: number;
+  maximumValue?: number;
 };
 
 const CircularSlider: RneFunctionComponent<CircularSliderProps> = ({
@@ -37,8 +30,10 @@ const CircularSlider: RneFunctionComponent<CircularSliderProps> = ({
   trackTintColor,
   trackColor,
   value = 0,
+  minimumValue = 0,
+  maximumValue = 100,
   onChange = (x) => x,
-  thumbMarkerColor = 'white',
+  thumbTextColor = 'white',
   thumbTextSize = 10,
   noThumb = false,
   showText = false,
@@ -50,6 +45,7 @@ const CircularSlider: RneFunctionComponent<CircularSliderProps> = ({
 }) => {
   const [location, setLocation] = React.useState({ x: 0, y: 0 });
   const viewRef = React.useRef<View>(null);
+  const valuePercentage = ((value - minimumValue) * 100) / maximumValue;
 
   const { current: panResponder } = React.useRef(
     PanResponder.create({
@@ -98,7 +94,7 @@ const CircularSlider: RneFunctionComponent<CircularSliderProps> = ({
 
   const width = (trackRadius + thumbRadius) * 2;
   const startCoord = polarToCartesian(0);
-  const endCoord = polarToCartesian(value * 3.6);
+  const endCoord = polarToCartesian(valuePercentage * 3.6);
 
   return (
     <View
@@ -128,9 +124,9 @@ const CircularSlider: RneFunctionComponent<CircularSliderProps> = ({
           fill="none"
           d={`M${startCoord.x} ${
             startCoord.y
-          } A ${trackRadius} ${trackRadius} 0 ${value * 3.6 > 180 ? 1 : 0} 1 ${
-            endCoord.x
-          } ${endCoord.y}`}
+          } A ${trackRadius} ${trackRadius} 0 ${
+            valuePercentage * 3.6 > 180 ? 1 : 0
+          } 1 ${endCoord.x} ${endCoord.y}`}
         />
         {showText && (
           <Text
@@ -140,7 +136,7 @@ const CircularSlider: RneFunctionComponent<CircularSliderProps> = ({
             fill={textColor || trackColor || theme?.colors?.primary}
             textAnchor="middle"
           >
-            {Math.ceil(value).toString().padStart(2, '0')}
+            {Math.ceil(value).toString()}
           </Text>
         )}
 
@@ -158,7 +154,7 @@ const CircularSlider: RneFunctionComponent<CircularSliderProps> = ({
                 x={thumbRadius}
                 y={thumbRadius + thumbTextSize / 2}
                 fontSize={10}
-                fill={thumbMarkerColor || theme?.colors?.white}
+                fill={thumbTextColor || theme?.colors?.white}
                 textAnchor="middle"
               >
                 {Math.ceil(value).toString().padStart(2, '0')}
