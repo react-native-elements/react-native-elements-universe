@@ -20,6 +20,7 @@ export type CircularSliderProps = {
   textColor?: string;
   textSize?: number;
   minimumValue?: number;
+
   maximumValue?: number;
 };
 
