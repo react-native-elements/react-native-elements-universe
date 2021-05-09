@@ -1,6 +1,6 @@
 import React from 'react';
 import { PanResponder, PanResponderGestureState, View } from 'react-native';
-import { RneFunctionComponent } from 'react-native-elements/src/helpers';
+import { RneFunctionComponent } from 'react-native-elements/dist/helpers';
 import Svg, { Path, Circle, G, Text } from 'react-native-svg';
 
 export type CircularSliderProps = {
@@ -21,6 +21,9 @@ export type CircularSliderProps = {
   textSize?: number;
   minimumValue?: number;
   maximumValue?: number;
+  // Angles in Radians
+  maxAngle?: number;
+  minAngle?: number;
 };
 
 const CircularSlider: RneFunctionComponent<CircularSliderProps> = ({
@@ -32,6 +35,8 @@ const CircularSlider: RneFunctionComponent<CircularSliderProps> = ({
   value = 0,
   minimumValue = 0,
   maximumValue = 100,
+  minAngle = 0,
+  maxAngle = 359.9,
   onChange = (x) => x,
   thumbTextColor = 'white',
   thumbTextSize = 10,
@@ -43,7 +48,7 @@ const CircularSlider: RneFunctionComponent<CircularSliderProps> = ({
   textSize = 80,
   theme,
 }) => {
-  const [location, setLocation] = React.useState({ x: 0, y: 0 });
+  const location = React.useRef({ x: 0, y: 0 });
   const viewRef = React.useRef<View>(null);
   const valuePercentage = ((value - minimumValue) * 100) / maximumValue;
 
@@ -53,10 +58,19 @@ const CircularSlider: RneFunctionComponent<CircularSliderProps> = ({
       onStartShouldSetPanResponderCapture: () => true,
       onMoveShouldSetPanResponder: () => true,
       onMoveShouldSetPanResponderCapture: () => true,
-      onPanResponderGrant: () => location.x && location.y,
+      onPanResponderGrant: () => location.current.x && location.current.y,
       onPanResponderMove: (_e, { moveX, moveY }: PanResponderGestureState) => {
-        let angle = cartesianToPolar(moveX - location.x, moveY - location.y);
-        onChange(angle / 3.6);
+        let angle = cartesianToPolar(
+          moveX - location.current.x + trackRadius + thumbRadius,
+          moveY - location.current.y + trackRadius + thumbRadius
+        );
+        if (angle <= minAngle) {
+          onChange(minAngle / 3.6);
+        } else if (angle >= maxAngle) {
+          onChange(maxAngle / 3.6);
+        } else {
+          onChange(angle / 3.6);
+        }
       },
     })
   );
@@ -95,6 +109,7 @@ const CircularSlider: RneFunctionComponent<CircularSliderProps> = ({
   const width = (trackRadius + thumbRadius) * 2;
   const startCoord = polarToCartesian(0);
   const endCoord = polarToCartesian(valuePercentage * 3.6);
+  const endTintCoord = polarToCartesian(maxAngle);
 
   return (
     <View
@@ -102,22 +117,31 @@ const CircularSlider: RneFunctionComponent<CircularSliderProps> = ({
       ref={viewRef}
       onLayout={() => {
         viewRef.current?.measure((x, y, w, h, px, py) => {
-          setLocation({
+          location.current = {
             x: px + w / 2,
             y: py + h / 2,
-          });
+          };
         });
       }}
     >
       <Svg width={width} height={width} ref={viewRef}>
-        <Circle
-          r={trackRadius}
-          cx={width / 2}
-          cy={width / 2}
+        <Path
           stroke={trackTintColor || theme?.colors?.grey5}
           strokeWidth={trackWidth}
+          d={[
+            'M',
+            startCoord.x,
+            startCoord.y,
+            'A',
+            trackRadius,
+            trackRadius,
+            0,
+            maxAngle <= 180 ? '0' : '1',
+            1,
+            endTintCoord.x,
+            endTintCoord.y,
+          ].join(' ')}
         />
-
         <Path
           stroke={trackColor || theme?.colors?.primary}
           strokeWidth={trackWidth}
