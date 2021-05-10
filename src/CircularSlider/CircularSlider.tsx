@@ -21,7 +21,7 @@ export type CircularSliderProps = {
   textSize?: number;
   minimumValue?: number;
   maximumValue?: number;
-  // Angles in Radians
+  // Angles in Degrees
   maxAngle?: number;
   minAngle?: number;
 };
